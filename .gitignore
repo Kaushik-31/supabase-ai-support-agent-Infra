@@ -1,0 +1,37 @@
+# Terraform
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+tfplan
+crash.log
+terraform.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Backend file (generated during CI from config/)
+/backend.tf
+
+# Sensitive files - uncomment if you want to exclude tfvars
+# *.tfvars
+# !terraform.tfvars.example
+
+# Local .terraform directories
+**/.terraform/*
+
+# SSH keys
+*.pem
+*.key
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

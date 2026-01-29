@@ -1,0 +1,104 @@
+name: Deploy
+
+# Trigger this workflow when there's a push to main or any feature branch
+on:
+  push:
+    branches:
+      - main
+      - feature/implementing-infra 
+
+# Required permissions for using OIDC and reading repo contents
+permissions:
+  id-token: write   # Enables GitHub to request an OIDC token
+  contents: read    # Allows checking out code
+
+# Define common environment variables used throughout the job
+env:
+  TF_VERSION: '1.5.0'
+  AWS_REGION: 'us-east-1'
+  OIDC_ROLE_ARN: arn:aws:iam::685603906670:role/bootstrap-role
+  TF_LOG: 'DEBUG'
+  TF_LOG_PATH: './terraform.log'
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Configure AWS credentials using OIDC
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.OIDC_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # Step 3: Install Terraform CLI on the runner
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      # Step 4: Set environment-specific variables
+      - name: Set Environment Variables
+        id: env
+        run: |
+          if [[ "${GITHUB_REF##*/}" == "main" ]]; then
+            echo "environment=prod" >> $GITHUB_OUTPUT
+            echo "tfvars=config/prod/prod.tfvars" >> $GITHUB_OUTPUT
+          else
+            echo "environment=dev" >> $GITHUB_OUTPUT
+            echo "tfvars=config/dev/dev.tfvars" >> $GITHUB_OUTPUT
+          fi
+
+      # Step 5: Setup backend configuration
+      - name: Setup Backend Configuration
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+
+          if [[ "${GITHUB_REF##*/}" == "main" ]]; then
+            echo "Copying production backend configuration..."
+            cp config/prod/backend-prod.tf backend.tf
+          else
+            echo "Copying development backend configuration..."
+            cp config/dev/backend-dev.tf backend.tf
+          fi
+
+          # Replace ACCOUNT_ID placeholder with actual account ID
+          sed -i "s/ACCOUNT_ID/${ACCOUNT_ID}/g" backend.tf
+
+      # Step 6: Initialize Terraform
+      - name: Terraform Init
+        run: |
+          terraform init
+          echo "Terraform init completed with debug logs saved to terraform.log"
+
+      # Step 7: Validate Terraform syntax and schema
+      - name: Terraform Validate
+        run: |
+          terraform validate
+          echo "Terraform validate completed with debug logs saved to terraform.log"
+
+      # Step 8: Run Terraform plan
+      - name: Terraform Plan
+        run: |
+          terraform plan -var-file="${{ steps.env.outputs.tfvars }}" -out=tfplan
+          echo "Terraform plan completed with debug logs saved to terraform.log"
+
+      # Step 9: Apply changes automatically
+      - name: Terraform Apply
+        run: |
+          terraform apply -auto-approve tfplan
+          echo "Terraform apply completed with debug logs saved to terraform.log"
+
+      # Step 10: Upload Terraform logs as artifact
+      - name: Upload Terraform Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-logs-${{ steps.env.outputs.environment }}
+          path: terraform.log
+          retention-days: 7
