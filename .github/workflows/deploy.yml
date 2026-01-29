@@ -16,7 +16,7 @@ permissions:
 env:
   TF_VERSION: '1.5.0'
   AWS_REGION: 'us-east-1'
-  OIDC_ROLE_ARN: arn:aws:iam::685603906670:role/bootstrap-role
+  OIDC_ROLE_ARN: arn:aws:iam::685603906670:role/Supabase-chatbot-Bootstrap-role
   TF_LOG: 'DEBUG'
   TF_LOG_PATH: './terraform.log'
 
