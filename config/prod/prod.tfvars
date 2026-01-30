@@ -18,7 +18,7 @@ s3_bucket_name        = "supabase-chatbot-frontend-prod"
 s3_versioning_enabled = true
 
 # EC2 Configuration
-ec2_ami_id           = "ami-0c55b159cbfafe1f0"
+ec2_ami_id           = "ami-0230bd60aa48260c6"  # Amazon Linux 2023 us-east-1
 ec2_instance_type    = "t3.small"
 ec2_root_volume_size = 30
 
