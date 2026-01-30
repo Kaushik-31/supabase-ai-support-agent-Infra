@@ -1,5 +1,5 @@
 resource "aws_instance" "this" {
-  count = var.instance_count
+  count = length(var.instance_names)
 
   ami           = var.ami_id
   instance_type = var.instance_type
@@ -8,7 +8,7 @@ resource "aws_instance" "this" {
   vpc_security_group_ids      = var.security_group_ids
   associate_public_ip_address = var.associate_public_ip
 
-  key_name = var.key_name
+  key_name = var.key_names[count.index]
 
   root_block_device {
     volume_size           = var.root_volume_size
@@ -20,7 +20,7 @@ resource "aws_instance" "this" {
   tags = merge(
     var.tags,
     {
-      Name = "${var.name_prefix}-${count.index + 1}"
+      Name = var.instance_names[count.index]
     }
   )
 }

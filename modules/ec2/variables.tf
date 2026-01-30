@@ -1,7 +1,6 @@
-variable "instance_count" {
-  description = "Number of EC2 instances to create"
-  type        = number
-  default     = 2
+variable "instance_names" {
+  description = "List of names for the EC2 instances"
+  type        = list(string)
 }
 
 variable "ami_id" {
@@ -32,10 +31,9 @@ variable "associate_public_ip" {
   default     = false
 }
 
-variable "key_name" {
-  description = "Name of the SSH key pair"
-  type        = string
-  default     = null
+variable "key_names" {
+  description = "List of SSH key pair names (one per instance)"
+  type        = list(string)
 }
 
 variable "root_volume_size" {
@@ -48,12 +46,6 @@ variable "root_volume_type" {
   description = "Type of the root volume"
   type        = string
   default     = "gp3"
-}
-
-variable "name_prefix" {
-  description = "Prefix for instance names"
-  type        = string
-  default     = "ec2-instance"
 }
 
 variable "tags" {

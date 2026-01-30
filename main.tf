@@ -17,6 +17,11 @@ provider "aws" {
   region = var.aws_region
 }
 
+locals {
+  instance_names = ["${var.name_prefix}-db", "${var.name_prefix}-app"]
+  key_names      = ["${var.name_prefix}-db-key", "${var.name_prefix}-app-key"]
+}
+
 # VPC with public subnets
 module "vpc" {
   source = "./modules/vpc"
@@ -43,11 +48,11 @@ module "security_group" {
   tags = var.tags
 }
 
-# Key pair with private key stored in Secrets Manager
+# Key pairs with private keys stored in Secrets Manager (one per EC2 instance)
 module "key_pair" {
   source = "./modules/key_pair"
 
-  key_name                    = "${var.name_prefix}-key"
+  key_names                   = local.key_names
   secret_recovery_window_days = var.secret_recovery_window_days
 
   tags = var.tags
@@ -67,15 +72,14 @@ module "s3_bucket" {
 module "ec2_instances" {
   source = "./modules/ec2"
 
-  instance_count      = 2
+  instance_names      = local.instance_names
   ami_id              = var.ec2_ami_id
   instance_type       = var.ec2_instance_type
   subnet_ids          = module.vpc.public_subnet_ids
   security_group_ids  = [module.security_group.security_group_id]
   associate_public_ip = true
-  key_name            = module.key_pair.key_name
+  key_names           = module.key_pair.key_names
   root_volume_size    = var.ec2_root_volume_size
-  name_prefix         = var.name_prefix
 
   tags = var.tags
 }

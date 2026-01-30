@@ -16,19 +16,19 @@ output "security_group_id" {
 }
 
 # Key Pair Outputs
-output "key_pair_name" {
-  description = "Name of the key pair"
-  value       = module.key_pair.key_name
+output "key_pair_names" {
+  description = "List of key pair names"
+  value       = module.key_pair.key_names
 }
 
-output "private_key_secret_arn" {
-  description = "ARN of the Secrets Manager secret containing the private key"
-  value       = module.key_pair.secret_arn
+output "private_key_secret_arns" {
+  description = "List of Secrets Manager secret ARNs containing the private keys"
+  value       = module.key_pair.secret_arns
 }
 
-output "private_key_secret_name" {
-  description = "Name of the Secrets Manager secret containing the private key"
-  value       = module.key_pair.secret_name
+output "private_key_secret_names" {
+  description = "List of Secrets Manager secret names containing the private keys"
+  value       = module.key_pair.secret_names
 }
 
 # S3 Outputs
@@ -67,17 +67,16 @@ output "ec2_public_ips" {
 output "ssh_connection_instructions" {
   description = "Instructions to connect to EC2 instances via SSH"
   value       = <<-EOT
-    To retrieve your private key and connect to your EC2 instances:
+    Each EC2 instance has its own unique key pair stored in Secrets Manager.
 
-    1. Get the private key from Secrets Manager:
-       aws secretsmanager get-secret-value --secret-id ${module.key_pair.secret_name} --query 'SecretString' --output text | jq -r '.private_key' > ${module.key_pair.key_name}.pem
+    To connect to DB Instance (${local.instance_names[0]}):
+      aws secretsmanager get-secret-value --secret-id ${module.key_pair.secret_names[0]} --query 'SecretString' --output text | jq -r '.private_key' > ${local.key_names[0]}.pem
+      chmod 400 ${local.key_names[0]}.pem
+      ssh -i ${local.key_names[0]}.pem ec2-user@${module.ec2_instances.public_ips[0]}
 
-    2. Set correct permissions:
-       chmod 400 ${module.key_pair.key_name}.pem
-
-    3. Connect to your instances:
-       ssh -i ${module.key_pair.key_name}.pem ec2-user@<public-ip>
-
-    Public IPs: ${join(", ", module.ec2_instances.public_ips)}
+    To connect to App Instance (${local.instance_names[1]}):
+      aws secretsmanager get-secret-value --secret-id ${module.key_pair.secret_names[1]} --query 'SecretString' --output text | jq -r '.private_key' > ${local.key_names[1]}.pem
+      chmod 400 ${local.key_names[1]}.pem
+      ssh -i ${local.key_names[1]}.pem ec2-user@${module.ec2_instances.public_ips[1]}
   EOT
 }

@@ -1,6 +1,6 @@
-variable "key_name" {
-  description = "Name for the key pair"
-  type        = string
+variable "key_names" {
+  description = "List of names for the key pairs"
+  type        = list(string)
 }
 
 variable "secret_recovery_window_days" {
