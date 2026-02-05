@@ -63,6 +63,31 @@ output "ec2_public_ips" {
   value       = module.ec2_instances.public_ips
 }
 
+# Database Outputs
+output "db_password_secret_name" {
+  description = "Secrets Manager secret name for the PostgreSQL password"
+  value       = aws_secretsmanager_secret.db_password.name
+}
+
+output "db_password_secret_arn" {
+  description = "Secrets Manager secret ARN for the PostgreSQL password"
+  value       = aws_secretsmanager_secret.db_password.arn
+}
+
+output "db_connection_info" {
+  description = "PostgreSQL connection details"
+  value       = <<-EOT
+    Host:     ${module.ec2_instances.private_ips[0]}
+    Port:     5432
+    Database: saas_support
+    User:     chatbot_user
+
+    Get password: aws secretsmanager get-secret-value --secret-id ${aws_secretsmanager_secret.db_password.name} --query 'SecretString' --output text | jq -r '.password'
+
+    Connect from App instance: psql -h ${module.ec2_instances.private_ips[0]} -U chatbot_user -d saas_support
+  EOT
+}
+
 # SSH Connection Info
 output "ssh_connection_instructions" {
   description = "Instructions to connect to EC2 instances via SSH"

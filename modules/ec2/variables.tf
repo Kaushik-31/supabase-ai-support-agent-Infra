@@ -48,6 +48,12 @@ variable "root_volume_type" {
   default     = "gp3"
 }
 
+variable "user_data_scripts" {
+  description = "List of user_data scripts (one per instance, empty string for none)"
+  type        = list(string)
+  default     = []
+}
+
 variable "tags" {
   description = "Tags to apply to the EC2 instances"
   type        = map(string)

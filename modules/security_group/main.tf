@@ -56,6 +56,21 @@ resource "aws_vpc_security_group_ingress_rule" "https" {
   }
 }
 
+resource "aws_vpc_security_group_ingress_rule" "postgresql" {
+  count = var.allow_postgresql ? 1 : 0
+
+  security_group_id = aws_security_group.this.id
+  description       = "Allow PostgreSQL access from VPC"
+  from_port         = 5432
+  to_port           = 5432
+  ip_protocol       = "tcp"
+  cidr_ipv4         = var.postgresql_cidr
+
+  tags = {
+    Name = "PostgreSQL"
+  }
+}
+
 resource "aws_vpc_security_group_egress_rule" "all_outbound" {
   security_group_id = aws_security_group.this.id
   description       = "Allow all outbound traffic"

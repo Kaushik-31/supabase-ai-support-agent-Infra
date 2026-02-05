@@ -39,6 +39,18 @@ variable "allow_https" {
   default     = true
 }
 
+variable "allow_postgresql" {
+  description = "Allow PostgreSQL access"
+  type        = bool
+  default     = false
+}
+
+variable "postgresql_cidr" {
+  description = "CIDR block for PostgreSQL access (e.g. VPC CIDR)"
+  type        = string
+  default     = ""
+}
+
 variable "tags" {
   description = "Tags to apply to resources"
   type        = map(string)

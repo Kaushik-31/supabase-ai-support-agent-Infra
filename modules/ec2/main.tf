@@ -8,7 +8,8 @@ resource "aws_instance" "this" {
   vpc_security_group_ids      = var.security_group_ids
   associate_public_ip_address = var.associate_public_ip
 
-  key_name = var.key_names[count.index]
+  key_name  = var.key_names[count.index]
+  user_data = length(var.user_data_scripts) > count.index && var.user_data_scripts[count.index] != "" ? var.user_data_scripts[count.index] : null
 
   root_block_device {
     volume_size           = var.root_volume_size
